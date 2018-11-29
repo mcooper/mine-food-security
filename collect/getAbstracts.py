@@ -18,6 +18,8 @@ def getAbstract(docContentURL):
 	abstract = soup.h3.find_next_siblings('p')[0].get_text()
 	return abstract
 
+def getAuthorKeywords(docContentURL):
+
 def Abstract(eid):
 	url = getContentURL(eid)
 	abstract = getAbstract(url)
@@ -25,7 +27,7 @@ def Abstract(eid):
 	
 
 abstractPath = r'D:\Projects\textMining\data\abstracts'
-df = pd.read_csv(r'D:\Projects\textMining\data\scopus_1.csv')
+df = pd.read_csv(r'D:\Projects\textMining\data\scopus.csv')
 eid_list = list(df.EID)
 #for restarting, check previous results
 done = os.listdir(abstractPath)
@@ -37,7 +39,7 @@ for eid in eid_list:
         with open(os.path.join(abstractPath,eid),'w') as f:
             f.write(abstract.encode('utf8'))
     except:
-        with open(os.path.join(abstractPath,'errors_1'),'a') as f:
+        with open(os.path.join(abstractPath,'errors'),'a') as f:
             f.write(eid+'\n')
 
 
