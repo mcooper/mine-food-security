@@ -54,8 +54,4 @@ scopus = scopus.loc[~pd.isnull(scopus['text'])]
 #      Filter based on document type
 #      Filter potential duplicates/similar abstracts?
 
-locations = pd.read_csv(FILES_DIR + 'Locations.csv')
-
-final = scopus.merge(locations, on="EID")
-
-final.to_csv(FILES_DIR + 'abstracts.csv')
+scopus.to_csv(FILES_DIR + 'abstracts.csv', index=False)
