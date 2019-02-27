@@ -39,7 +39,7 @@ dtm <- removeSparseTerms(dtm, sparse=(1 - n/dtm[[4]]))
 
 
 #Run Model
-ldamod43 <- LDA(dtm, k = 43, method = "Gibbs")
+ldamod43 <- LDA(dtm, k = 43, method = "VEM")
 
 ldamod200 <- LDA(dtm, k = 43, method = "Gibbs")
 
