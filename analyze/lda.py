@@ -7,8 +7,11 @@ from nltk.tokenize import RegexpTokenizer
 import textmining
 from nltk.stem.snowball import SnowballStemmer
 from gensim import corpora, models
+import os
 
-data = pd.read_csv('C://Git/mine-food-security/data/abstracts.csv', encoding='utf-8')
+#os.chdir('C://Git/mine-food-security/data/')
+
+data = pd.read_csv('../abstracts.csv', encoding='utf-8')
 abstracts = data['text'].tolist()
 
 tdm = textmining.TermDocumentMatrix()
@@ -43,12 +46,20 @@ for t in abstracts:
 dictionary = corpora.Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
-ldamodel = models.ldamodel.LdaModel(corpus, num_topics=6, id2word = dictionary, passes=40)
+ks = range(50, 100, 5) + range(100, 200, 10) + range(200, 501, 25)
 
-res = ldamodel.print_topics(num_topics=6, num_words=10)
-
-
-
-
-
+try:
+	for k in range(50, 250, 5):
+		print(k)
+		
+		ldamodel = models.ldamulticore.LdaMulticore(corpus, num_topics=k, id2word = dictionary, passes=40, workers=3)
+		
+		with open('mod' + str(k), 'wb') as handle:
+			pickle.dump(ldamodel, handle, protocol=pickle.HIGHEST_PROTOCOL)
+	
+	os.system('../telegram.sh "LDAs Done!"')
+	
+except Exception, e:
+	print(repr(e))
+	os.system('../telegram.sh "On ' + str(k) + ' Error:' + repr(e) + '"')
 
