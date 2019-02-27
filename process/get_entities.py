@@ -40,37 +40,44 @@ def get_entities(text):
 
     # Instantiates a plain text document.
     document = types.Document(
-        content=text,
+        content=re_clean(text),
         type=enums.Document.Type.PLAIN_TEXT)
 
     # Detects entities in the document. You can also analyze HTML with:
     #   document.type == enums.Document.Type.HTML
-    entities = client.analyze_entities(document).entities
-
-    response = parse_response(entities)
+    try:
+        entities = client.analyze_entities(document).entities
+        response = parse_response(entities)
+    except Exception as e:
+        response = repr(e)
+        print(e)
     
     return response
 
-for index, row in data[1:10].iterrows():
+def process_text(text, part, eid, alreadydone):
+    filename = eid + '-' + part
+    
+    #Check first if already been done, in case I need to re-run the for loop
+    if filename in alreadydone:
+        pass
+    else:
+        entities = get_entities(text)
+        f = open(OUT_DIR + filename, 'wb')
+        f.write(json.dumps(entities, ensure_ascii=False).encode('utf-8'))
+        f.close()
+
+alreadydone = os.listdir(OUT_DIR)
+for index, row in data.iterrows():
+    
+    eid = row['EID']
     
     abstract = row['text']
     keywords = row['keywords']
     title = row['Title']
     
-    abs_entities = get_entities(abstract)
-    f = open(OUT_DIR + row['EID'] + '-abstract', 'wb')
-    f.write(json.dumps(abs_entities, ensure_ascii=False).encode('utf-8'))
-    f.close()
-
+    process_text(abstract, 'abstract', eid, alreadydone)
     if keywords != ',':
-        kw_entities = get_entities(keywords)
-        f = open(OUT_DIR + row['EID'] + '-keywords', 'wb')
-        f.write(json.dumps(kw_entities, ensure_ascii=False).encode('utf-8'))
-        f.close()
-
-    title_entities = get_entities(title)
-    f = open(OUT_DIR + row['EID'] + '-title', 'wb')
-    f.write(json.dumps(title_entities, ensure_ascii=False).encode('utf-8'))
-    f.close()
+        process_text(keywords, 'keywords', eid, alreadydone)
+    process_text(title, 'title', eid, alreadydone)
     
     print(index)
