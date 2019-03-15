@@ -50,39 +50,53 @@ for t in abstracts:
 dictionary = corpora.Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
+ks = list(range(10, 50)) + list(range(50, 100, 5)) + list(range(100, 140, 10))
 
-with open("LDAmods/mod10", "rb") as input_file:
-     mod = pickle.load(input_file, encoding='latin1')
+try:
+    resultsdf = pd.DataFrame({})
+    for k in ks:
+        
+        with open("LDAmods/mod" + str(k), "rb") as input_file:
+             mod = pickle.load(input_file, encoding='latin1')
+             
+        #Cao Juan 2009
+        caojuan = evaluate.metric_cao_juan_2009(mod.state.get_lambda())
+        
+        # Compute Perplexity
+        perplexity = mod.log_perplexity(corpus)  # a measure of how good the model is. lower the better.
+        
+        # Compute Coherence Score Want the highest value without flattening out
+        coherence_model_lda = CoherenceModel(model=mod, texts=texts, dictionary=dictionary, coherence='c_v')
+        coherence_lda = coherence_model_lda.get_coherence()
+        
+        #Arun et al
+        topic_word_distrib = mod.state.get_lambda()
+        
+        doc_topic_list = []
+        for doc_topic in mod.get_document_topics(corpus):
+            d = dict(doc_topic)
+            t = tuple(d.get(ind, 0.) for ind in range(mod.num_topics))
+            doc_topic_list.append(t)
+        doc_topic_distrib = np.array(doc_topic_list)
+        
+        doc_lengths = np.array(list(map(len, texts)))
+         
+        arun = evaluate.metric_arun_2010(mod.state.get_lambda(), doc_topic_distrib, doc_lengths)
+        
+        tmpdf = pd.DataFrame({'caojuan': caojuan, 'perplexity': perplexity, 'coherence': coherence_lda,
+                              'arun': arun, 'k': k}, index=[0])
+        
+        resultsdf = resultsdf.append(tmpdf)
+        
+        print(k)
+    os.system('./telegram.sh "Done with LDA mod evaluation"')
+    
+except Exception as ex:
+    print(ex)
+    os.system('./telegram.sh "Error in LDA evaluation"')
 
 
 
 
 
-#Cao Juan 2009
-caojuan = evaluate.metric_cao_juan_2009(mod.state.get_lambda())
      
-     
-     
-
-
-# Compute Perplexity
-perplexity = mod.log_perplexity(corpus)  # a measure of how good the model is. lower the better.
-
-# Compute Coherence Score Want the highest value without flattening out
-coherence_model_lda = CoherenceModel(model=mod, texts=texts, dictionary=dictionary, coherence='c_v')
-coherence_lda = coherence_model_lda.get_coherence()
-
-#Arun et al
-topic_word_distrib = mod.state.get_lambda()
-
-doc_topic_distrib = pd.DataFrame({})
-all_topics = mod.get_document_topics(corpus, per_word_topics=True)
-for doc_topics, word_topics, phi_values in all_topics:
-    doc_topic_distrib = doc_topic_distrib.append(pd.DataFrame(dict(doc_topics), index=[0]))
-doc_topic_distrib = doc_topic_distrib.fillna(0)
-
-doc_lengths = np.array(list(map(len, texts)))
- 
-arun = evaluate.metric_arun_2010(mod.state.get_lambda(), doc_topic_distrib, doc_lengths)
- 
- 
