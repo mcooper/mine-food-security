@@ -30,7 +30,22 @@ stopwords = stopwords + ["study", "studies", "studied", "paper", "papers",
                          "objective", "objectives", "result", "conculsion" 
                          "results", "conclusions", "purpose", "purposes", 
                          "methods", "method", "methodology", "approaches",
-                         "data", "introduction", "approach"]
+                         "data", "introduction", "approach", "result",
+                         "estimate", "estimation", "among", "also", "review",
+                         "make", "first", "significant", "significance", "find",
+                         "finding", "findings", "found", "may", "might", "can", 
+                         "could", "suggest", "suggests", "suggestion", "survey",
+                         "suggestions", "surveys", "three", "two", "one", "four", 
+                         "five", "six", "seven", "eight", "nine", "ten", "present",
+                         "presents", "presenting", "presented", "presenter", "presentation",
+                         "however", "futhermore", "moreover", "within", "main", 
+                         "show", "shows", "reserach", "assess", "assessed", "assessment", "examine",
+                         "examined", "examines", "report", "reported", "reporting",
+                         "like", "include", "including", "includes", 
+                         "increased", "increasing", "increases", "higher", "lower",
+                         "raises", "lowers", "develop", "develops", "developed",
+                         "development", "differ", "differs", "different", "product",
+                         "production", "use"]
 
 stemmer = SnowballStemmer("english")
 
@@ -50,7 +65,7 @@ for t in abstracts:
     
     texts.append(tokens)
 
-bigram = Phrases(texts, min_count=20)
+bigram = Phrases(texts, min_count=15)
 for idx in range(len(texts)):
     for token in bigram[texts[idx]]:
         if '_' in token:
@@ -58,10 +73,19 @@ for idx in range(len(texts)):
             texts[idx].append(token)
 
 dictionary = corpora.Dictionary(texts)
-dictionary.filter_extremes(no_below=10, no_above=0.5)
+dictionary.filter_extremes(no_below=10, no_above=0.3)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
-ks = list(range(2, 50, 3)) + list(range(50, 100, 5)) + list(range(100, 150, 10)) + list(range(150, 201, 25)) 
+with open('LDA-dictionary', 'wb') as handle:
+    pickle.dump(dictionary, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+with open('LDA-corpus', 'wb') as handle:
+    pickle.dump(corpus, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+with open('LDA-texts', 'wb') as handle:
+    pickle.dump(texts, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+ks = list(range(2, 40, 4)) + list(range(40, 55, 1)) + list(range(55, 100, 5)) + list(range(100, 150, 10)) + list(range(150, 201, 25)) 
 
 try:
 	for k in ks:

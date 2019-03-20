@@ -2,73 +2,40 @@
 #Great documentation here: https://rstudio-pubs-static.s3.amazonaws.com/79360_850b2a69980c4488b1db95987a24867a.html
 
 import pandas as pd
-from nltk.tokenize import RegexpTokenizer
-from nltk.corpus import stopwords
-from nltk.stem.snowball import SnowballStemmer
 from gensim import corpora
-from gensim.models import Phrases
 import os
 import pickle
 import numpy as np
 from tmtoolkit.topicmod import evaluate
 from gensim.models import CoherenceModel
 
-#os.chdir('C://Git/mine-food-security/data/')
+with open("LDA-dictionary", "rb") as input_file:
+    dictionary = pickle.load(input_file, encoding='latin1')
 
-data = pd.read_csv('abstracts.csv', encoding='utf-8')
-abstracts = data['text'].tolist()
-
-tokenizer = RegexpTokenizer(r'\w+')
-stopwords = stopwords.words('english')
-
-#Get rid of small numbers
-stopwords = list(stopwords) + list(map(str, range(1001)))
-
-#Add Food and Security and Insecurity, because they will be in every abstract
-stopwords = stopwords + ["food", "security", "insecurity"]
-
-#Add other stopwords that likely appear in many abstracts and arent very topical
-stopwords = stopwords + ["study", "studies", "studied", "paper", "papers", 
-                         "article", "articles", "abstract", "abstracts", 
-                         "objective", "objectives", "result", "conculsion" 
-                         "results", "conclusions", "purpose", "purposes", 
-                         "methods", "method", "methodology", "approaches",
-                         "data", "introduction", "approach"]
-
-stemmer = SnowballStemmer("english")
-
-texts = []
-for t in abstracts:
-    #Tokenize
-    tokens = tokenizer.tokenize(t.lower())
+with open("LDA-corpus", "rb") as input_file:
+    corpus = pickle.load(input_file, encoding='latin1')
     
-    #Remove Stopwords
-    tokens = [i for i in tokens if not i in stopwords]
-    
-    #Stem Tokens
-    tokens = [stemmer.stem(i) for i in tokens]
-    
-    #remove short strings
-    tokens = [i for i in tokens if len(i) > 2]
-    
-    texts.append(tokens)
+with open("LDA-texts", "rb") as input_file:
+    texts = pickle.load(input_file, encoding='latin1')
 
-bigram = Phrases(texts, min_count=20)
-for idx in range(len(texts)):
-    for token in bigram[texts[idx]]:
-        if '_' in token:
-            # Token is a bigram, add to document.
-            texts[idx].append(token)
 
 dictionary = corpora.Dictionary(texts)
 dictionary.filter_extremes(no_below=10, no_above=0.5)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
-ks = list(range(2, 50, 3)) + list(range(50, 100, 5)) + list(range(100, 150, 10)) + list(range(150, 201, 25)) 
+
+originalks = list(range(2, 50, 3)) + list(range(50, 100, 5)) + list(range(100, 150, 10)) + list(range(150, 201, 25)) 
+
+newks = list(range(35, 50))
+
+ks = []
+for k in newks:
+    if k not in originalks:
+        ks.append(k)
 
 try:
     resultsdf = pd.DataFrame({})
-    for k in ks:
+    for k in originalks + newks:
         
         with open("LDAmods/mod" + str(k), "rb") as input_file:
              mod = pickle.load(input_file, encoding='latin1')
@@ -94,25 +61,10 @@ try:
         
         doc_topic_distrib = np.array(doc_topic_list)
         
-        pd.DataFrame(doc_topic_distrib).to_csv('mod_summaries/mod' + str(k) + 'topic_word_dist.csv', index=False)
-        
         doc_lengths = np.array(list(map(len, texts)))
          
         arun = evaluate.metric_arun_2010(mod.state.get_lambda(), doc_topic_distrib, doc_lengths)
-        
-        #Get top words for each topic
-        topic_words = mod.print_topics(num_topics=k, num_words=15)
-        
-        wordranksdf = pd.DataFrame({})
-        for topic_number in range(0,k):
-            #Get top 15 words
-            for topic in topic_words:
-                if topic[0] == topic_number:
-                    wordranks = topic[1]
-            wordranksdf = wordranksdf.append(pd.DataFrame({"Topic_Number": topic_number, "TopWords": wordranks.encode('utf8')}, index=[0]))
-        
-        wordranksdf.to_csv('mod_summaries/mod' + str(k) + 'top15.csv')
-        
+            
         tmpdf = pd.DataFrame({'caojuan': caojuan, 'perplexity': perplexity, 'coherence': coherence_lda, 'arun': arun, 'k': k}, index=[0])
         
         resultsdf = resultsdf.append(tmpdf)
