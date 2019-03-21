@@ -15,7 +15,7 @@ for token in token2id:
 
 newdict = {}
 for d in dfs:
-    if dfs[d] > 25738/10.0:
+    if dfs[d] > 25738/5.0:
         string = id2token[d]
         value = dfs[d]/25738
         newdict[string] = value
