@@ -4,6 +4,8 @@ import pickle
 import numpy as np
 import re
 
+k = 28
+
 os.chdir('G://My Drive/mine-food-security/')
 
 abstracts = pd.read_csv('abstracts.csv')
@@ -14,10 +16,9 @@ with open("LDA-dictionary", "rb") as input_file:
 with open("LDA-corpus", "rb") as input_file:
     corpus = pickle.load(input_file, encoding='latin1')
 
-k = 44
-
-with open("LDAmods-python/mod" + str(k), "rb") as input_file:
+with open("LDAmods/mod" + str(k), "rb") as input_file:
     mod = pickle.load(input_file, encoding='latin1')
+
 
 topic_word_distrib = mod.state.get_lambda()
 
@@ -31,6 +32,7 @@ for topic_number in range(0,k):
             wordranks = re.sub(' \+ ', ', ', re.sub('.....\*', '', topic[1]))
     wordranksdf = wordranksdf.append(pd.DataFrame({"Topic_Number": topic_number, "TopWords": wordranks.encode('utf8')}, index=[0]))
 
+wordranksdf.to_csv('mod' + str(k) + 'wordranks.csv', index=False)
 
 doc_topic_list = []
 for doc_topic in mod.get_document_topics(corpus):
@@ -72,16 +74,24 @@ for i in range(k):
         q = topic_word_distrib[j, :]
         jsd_mat[i, j] = math.sqrt(JSD(p, q))
 
+#scale?
+jsd_mat = jsd_mat - jsd_mat[np.nonzero(jsd_mat)].min()
+jsd_mat = jsd_mat/jsd_mat.max()
+
+pd.DataFrame(jsd_mat).to_csv('mod' + str(k) + 'jsd_mat.csv')
+
 from sklearn.manifold import MDS
 
-embedding = MDS(2)
+embedding = MDS(2, metric=False)
 
 transformed = embedding.fit_transform(jsd_mat)
 
-import matplotlib.pyplot as plt
+pd.DataFrame(transformed).to_csv('mod' + str(k) + 'transformed_coords_nonmetric.csv')
 
-fig, ax = plt.subplots()
-ax.scatter(transformed[:, 0], transformed[:, 1])
+#import matplotlib.pyplot as plt
 
-for i, txt in enumerate(range(k)):
-    ax.annotate(txt, (transformed[i, 0], transformed[i, 1]))
+#fig, ax = plt.subplots()
+#ax.scatter(transformed[:, 0], transformed[:, 1])
+
+#for i, txt in enumerate(range(k)):
+#    ax.annotate(txt, (transformed[i, 0], transformed[i, 1]))

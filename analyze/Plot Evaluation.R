@@ -10,6 +10,8 @@ dat <- dat %>%
 sel <- dat %>%
   filter(k > 30 & k < 52)
 
-ggplot(sel) + geom_line(aes(x=k, y=value, color=metric)) + 
+ggplot(dat) + geom_line(aes(x=k, y=value, color=metric)) + 
   facet_grid(metric~., scales='free_y')
 
+#Minimize: Cao-Juan, Arun, Perplexity
+#Maximize: Coherence, 
