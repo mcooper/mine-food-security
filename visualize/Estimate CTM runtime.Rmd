@@ -1,0 +1,48 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+Use data from telegram messages to estimate model runtime
+
+```{r}
+start <- ymd_hms('2019-3-24 19:54:00')
+mod5 <- ymd_hms('2019-3-24 20:41:00')
+mod10 <- ymd_hms('2019-3-24 23:59:00')
+mod20 <- ymd_hms('2019-3-25 9:54:00')
+mod30 <- ymd_hms('2019-3-25 21:35:00')
+mod40 <- ymd_hms('2019-3-27 3:12:00')
+mod50 <- ymd_hms('2019-3-28 4:23:00')
+
+df <- data.frame(k=c(5, 10, 20, 30, 40, 50), 
+                 start=c(start, start, start, start, mod5, mod10),
+                 finish=c(mod5, mod10, mod20, mod30, mod40, mod50))
+
+df$duration <- df$finish - df$start
+df$time_per_k <- df$duration/df$k
+
+library(ggplot2)
+
+ggplot(df) + geom_line(aes(x=k, y=time_per_k))
+ggplot(df) + geom_line(aes(x=k, y=duration))
+```
+
+Estimate total runtime
+
+```{r}
+##Estimate Total Time
+est <- data.frame(k=c(5, seq(10, 120, 10)))
+
+mod <- lm(time_per_k~k, data=df)
+
+est$time_per_k <- predict(mod, est)
+
+time <- est$k*est$time_per_k
+
+for (i in 5:length(time)){
+  time[i] <- time[i] + time[i-4]
+}
+
+cat("Should be", time[est$k==90]/(60*24), "days for k=90 and", time[est$k==120]/(60*24), "for the whole thing (k=120)")
+
+```

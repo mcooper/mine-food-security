@@ -42,6 +42,8 @@ for doc_topic in mod.get_document_topics(corpus):
 
 doc_topic_distrib = np.array(doc_topic_list)
 
+pd.DataFrame(doc_topic_distrib).to_csv('mod' + str(k) + 'doc_topic_distribution.csv')
+
 abstract_example_df = pd.DataFrame({})
 for i in range(0, k):
     max10_ind = doc_topic_distrib[:,i].argsort()[-10:][::-1].tolist()
