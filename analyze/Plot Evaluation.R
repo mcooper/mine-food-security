@@ -1,19 +1,21 @@
-setwd('G://My Drive/mine-food-security')
+setwd('G://My Drive/mine-food-security/CTMmods')
 
+library(readr)
+library(topicmodels)
 library(tidyverse)
+library(ggplot2)
 
-dat <- read.csv('LDAmod_evaluation.csv')
+all <- data.frame()
+for (n in c(5, 10, 20, 30, 40, 50, 60, 70)){
+  load(paste0('ctm', n, '.Rdata'))
+  
+  new <- data.frame(k=n, logLik=as.numeric(logLik(ctm)), perplexity=perplexity(ctm)) 
 
-dat <- dat %>%
-  gather(metric, value, -k) %>%
-  merge(data.frame(metric=c('arun', 'caojuan', 'coherence', 'perplexity'),
-                   optimize=c('minimize', 'minimize', 'maximize', 'minimize')))
+  all <- bind_rows(all, new)    
+}
 
-sel <- dat %>%
-  filter(k > 30 & k < 52)
+all <- all %>%
+  gather(metric, score, -k)
 
-ggplot(dat) + geom_line(aes(x=k, y=value, color=optimize)) + 
-  facet_grid(metric~., scales='free_y')
-
-#Minimize: Cao-Juan, Arun, Perplexity
-#Maximize: Coherence, 
+ggplot(all) + geom_line(aes(x=k, y=score, color=metric)) + 
+  facet_wrap(metric ~ ., scales = 'free_y')

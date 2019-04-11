@@ -11,16 +11,15 @@ validation = validation[['EID', 'Continent']]
 
 comb = validation.merge(loc, how='inner', on='EID')
 
-pd.crosstab(comb['verdict'], comb['Continent'])
+print(pd.crosstab(comb['verdict'], comb['Continent']).to_string())
 
-#Continent    Africa  Asia  First World  LAC  None  World
-#verdict                                                 
-#Africa           65     0            0    0     1      4
-#Asia              0    66            1    0     0      3
-#Aspatial          1     4            8    1    55     30
-#First World       0     0           35    0     3      3
-#Global            0     0            0    0     0      5
-#LAC               0     0            1   13     0      1
+#Continent          Africa  Asia  First World  LAC  No Regional Focus
+#verdict                                                             
+#Africa                 64     0            0    0                  2
+#Asia                    0    66            0    0                  0
+#First World             0     1           35    1                  2
+#LAC                     0     0            0   10                  0
+#No Regional Focus       7    10           10    1                 91
 
 #79.666 correct
 
