@@ -26,8 +26,11 @@ abs <- abs[ , c('EID', 'loc_title', 'Title', 'loc_keywords', 'keywords', 'loc_ab
 
 val <- read.csv('Sample_Validation_Locations.csv')
 val <- val[val$EID %in% abs$EID, c('EID', 'Continent')]
+val <- merge(val, abs, all.x=T, all.y=F)
 
 abs <- abs[!abs$EID %in% val$EID, ]
 sel <- abs[sample(1:nrow(abs), 127, replace=F), ]
 
 fin <- bind_rows(val, sel)
+
+write.csv(fin, 'Sample_Validation_Locations.csv', row.names=F)

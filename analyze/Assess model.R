@@ -8,9 +8,7 @@ setwd('G://My Drive/mine-food-security/CTMmods')
 
 load('ctm40.Rdata')
 
-data <- read_csv('../abstracts.csv') %>%
-  data.frame %>%
-  filter((Type %in% c("Review", "Article")) & (nchar(text) > 500) & CitationCount > 0)
+data <- read_csv('../abstracts_final.csv')
 
 #write.csv(data, '../abstracts_final.csv', row.names=F, fileEncoding = "UTF-8")
 

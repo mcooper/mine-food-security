@@ -4,22 +4,21 @@ library(zoo)
 
 setwd('G://My Drive/mine-food-security')
 
-abstracts <- read.csv('abstracts.csv', stringsAsFactors = F) %>%
+abstracts <- read.csv('abstracts_final.csv', stringsAsFactors = F) %>%
   mutate(ind=seq(0, nrow(.)-1)) %>%
-  filter((Type %in% c("Review", "Article")) & (nchar(text) > 500) & CitationCount > 0) %>%
   select(ind, Year, EID)
 
-doc_topic <- read.csv('mod28doc_topic_distribution.csv') %>%
+doc_topic <- read.csv('CTMmods/CTM40 - Doc Topic Matrix.csv') %>%
   gather(topic, value, -X) %>%
   mutate(topic = gsub('X', '', topic)) %>%
   rename(ind=X)
 
-labels <- read_excel('mod28topic_abstracts_labelled.xlsx') %>%
-  select(topic=k, broadercategory)
+labels <- read_excel('CTM40 - Topics.xlsx') %>%
+  select(topic=Topic_Number, theme=`New group names`)
 
 doc_topic_labels <- merge(doc_topic, labels)
 doc_topic_labels <- doc_topic_labels %>%
-  group_by(ind, broadercategory) %>%
+  group_by(ind, theme) %>%
   summarize(value = mean(value))
 
 
@@ -31,20 +30,32 @@ abstracts_loc <- merge(abstracts, loc, all.x=T, all.y=F)
 all <- merge(doc_topic_labels, abstracts_loc) %>%
   na.omit
 
+alldf <- expand.grid(seq(1975, 2019), unique(all$theme))
+names(alldf) <- c('Year', 'theme')
+
 ts <- all %>% 
-  group_by(Year, broadercategory) %>%
+  group_by(Year, theme) %>%
   summarize(value=sum(value)) %>%
+  merge(alldf, all.x=T, all.y=T) %>%
+  mutate(value = ifelse(is.na(value), 0, value)) %>%
+  group_by(theme) %>%
+  arrange(Year) %>%
+  mutate(value = rollapply(value, 5, FUN=mean, na.rm=TRUE, fill=NA, partial=TRUE)) %>%
+  ungroup %>%
   group_by(Year) %>%
-  mutate(value=value/sum(value))
+  mutate(value=value/sum(value)) %>%
+  rename(Theme=theme) %>%
+  data.frame
 
 #Time Series
-ggplot(ts) + geom_area(aes(x=Year, y=value, fill=broadercategory)) + 
-  ggtitle('Proportion of FS Literature in Each Category Over Time') + 
+ggplot(ts) + geom_area(aes(x=Year, y=value, fill=Theme)) + 
+  ggtitle('Proportion of FS Literature in Each Category Over Time', 
+          subtitle='With a 5-Year Smoothing') + 
   scale_x_continuous(expand=c(0,0)) + 
   scale_y_continuous(expand=c(0,0))
-ggsave('G://My Drive/mine-food-security/TimeSeries.png')
+ggsave('C://Git/mine-food-security-tex/img/TimeSeries.png')
 
-ggplot(ts) + geom_line(aes(x=Year, y=value, color=broadercategory)) + 
+ggplot(ts) + geom_line(aes(x=Year, y=value, color=theme)) + 
   ggtitle('Proportion of FS Literature in Each Category Over Time') + 
   scale_x_continuous(expand=c(0,0)) + 
   scale_y_continuous(expand=c(0,0))
@@ -52,13 +63,13 @@ ggplot(ts) + geom_line(aes(x=Year, y=value, color=broadercategory)) +
 #By Continent
 geo <-  all %>% 
   filter(verdict %in% c('Africa', 'Asia', 'First World', 'LAC')) %>%
-  group_by(verdict, broadercategory) %>%
+  group_by(verdict, theme) %>%
   summarize(value=sum(value)) %>%
   group_by(verdict) %>%
   mutate(value=value/sum(value))
 
 #Geography
-ggplot(geo) + geom_bar(aes(x=factor(1), y=value, fill=broadercategory), stat='identity') + 
+ggplot(geo) + geom_bar(aes(x=factor(1), y=value, fill=theme), stat='identity') + 
   coord_polar(theta='y') + 
   facet_wrap(~verdict) + 
   ylab('') + xlab('') +
@@ -66,7 +77,7 @@ ggplot(geo) + geom_bar(aes(x=factor(1), y=value, fill=broadercategory), stat='id
         axis.ticks = element_blank(),
         panel.grid  = element_blank()) + 
   ggtitle('Proportion of FS Literature in Each Category By Continent')
-ggsave('G://My Drive/mine-food-security/ByGeography.png')
+ggsave('C://Git/mine-food-security-tex/img/ByGeography.png')
 
 alldf <- expand.grid(seq(1975, 2019), c('Africa', 'Asia', 'First World', 'LAC'))
 names(alldf) <- c('Year', 'verdict')
@@ -79,7 +90,7 @@ ts_geo <- abstracts_loc %>%
   mutate(count = ifelse(is.na(count), 0, count)) %>%
   group_by(verdict) %>%
   arrange(Year) %>%
-  mutate(count = rollapply(count, 3, FUN=mean, na.rm=TRUE, fill=NA, partial=TRUE)) %>%
+  mutate(count = rollapply(count, 5, FUN=mean, na.rm=TRUE, fill=NA, partial=TRUE)) %>%
   ungroup %>%
   group_by(Year) %>%
   mutate(freq=count/sum(count)) %>%
@@ -89,42 +100,10 @@ ts_geo <- abstracts_loc %>%
 #TS Geo
 ggplot(ts_geo) + geom_area(aes(x=Year, y=freq, fill=Continent)) + 
   ggtitle('Proportion of FS Literature in Each Continent Over Time', 
-          subtitle='With a 3-Year Smoothing') + 
-  scale_x_continuous(expand=c(0,0)) + 
+          subtitle='With a 5-Year Smoothing') + 
+  scale_x_continuous(expand=c(0,0), limits = c(1980, 2019)) + 
   scale_y_continuous(expand=c(0,0))
-ggsave('ByCountinent-Year.png')
-
-ggplot(abstracts) + geom_histogram(aes(x=Year), binwidth=1)
-ggsave('Histogram Over Time.png')
-
-#TS Policy Topics
-doc_topic <- read.csv('mod28doc_topic_distribution.csv') %>%
-  gather(topic, value, -X) %>%
-  mutate(topic = gsub('X', '', topic)) %>%
-  rename(ind=X)
-
-labels <- read_excel('mod28topic_abstracts_labelled.xlsx') %>%
-  select(topic=k, broadercategory, theme)
-
-doc_topic_labels <- merge(doc_topic, labels)
-doc_topic_labels <- doc_topic_labels %>%
-  filter(broadercategory=='policy') %>%
-  group_by(ind, theme) %>%
-  summarize(value = mean(value))
-
-policy_ts <- merge(doc_topic_labels, abstracts) %>%
-  group_by(Year, theme) %>%
-  summarize(value=sum(value)) %>%
-  group_by(Year) %>%
-  mutate(prop=value/sum(value))
-
-
-
-ggplot(policy_ts) + geom_area(aes(x=Year, y=prop, fill=theme)) + 
-  ggtitle('Proportion of "Policy" FS Literature in Each Topic Over Time') +  
-  scale_x_continuous(expand=c(0,0)) + 
-  scale_y_continuous(expand=c(0,0))
-ggsave('Policy-Topics.png')
+ggsave('C://Git/mine-food-security-tex/img/ByCountinent-Year.png')
 
 ggplot(abstracts) + geom_histogram(aes(x=Year), binwidth=1)
 ggsave('Histogram Over Time.png')

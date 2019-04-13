@@ -73,11 +73,8 @@ for eid in eids:
 df = pd.DataFrame(data)
 df.to_csv(FILES_DIR + "Locations.csv", index=False)
 
-f = open(FILES_DIR + 'All_Locations.csv', 'wb+')
+f = open(FILES_DIR + 'All_Locations.csv', 'w+', encoding="utf-8")
 f.write('location,count\n')
 for d in all_locations:
-    if isinstance(d, int):
-        f.write('"' + str(d) + '",' + str(all_locations[d]) + '\n')
-    else:
-        f.write('"' + d.encode('utf-8') + '",' + str(all_locations[d]) + '\n')
+    f.write('"' + d + '",' + str(all_locations[d]) + '\n')
 f.close()
