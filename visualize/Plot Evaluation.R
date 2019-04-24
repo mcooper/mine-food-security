@@ -28,13 +28,13 @@ ggplot(all) +
   scale_y_continuous(sec.axis = sec_axis(~(.*0.0005) + 7825,
                                          name="Perplexity")) + 
   theme_bw() + 
-  theme(legend.position = c(0.8, 0.5),
+  theme(legend.position = c(0.85, 0.5),
         legend.title = element_blank(),
         axis.title.y=element_blank(),
         axis.ticks.y=element_blank(),
         axis.text.y=element_blank()) + 
   #geom_vline(aes(xintercept=60), color='darkred', linetype=2) + 
-  geom_vline(aes(xintercept=40), color='darkred', linetype=2) +
+  geom_vline(aes(xintercept=60), color='darkred', linetype=2) +
   xlab('Number of Topics')
 
-ggsave('C://Git/mine-food-security-tex/img/evaluation.png', width=4, height=3)
+ggsave('C://Git/mine-food-security-tex/img/evaluation.png', width=6, height=4.5)

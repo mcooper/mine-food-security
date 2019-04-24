@@ -10,8 +10,6 @@ load('ctm40.Rdata')
 
 data <- read_csv('../abstracts_final.csv')
 
-#write.csv(data, '../abstracts_final.csv', row.names=F, fileEncoding = "UTF-8")
-
 pos <- posterior(ctm)
 
 terms <- pos$terms

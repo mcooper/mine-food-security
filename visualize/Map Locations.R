@@ -52,6 +52,8 @@ sp@data$id <- rownames(sp@data)
 sp$Mentions_Per_Cap <- (sp$total + 1)/(sp$POP_EST/1000000)
 sp$Mentions_Per_Cap[sp$total == 0] <- 0
 
+write.csv(sp@data, 'Mentions_Per_Cap.csv', row.names=F)
+
 spf <- fortify(sp, region='id')
 spf$rownum <- 1:nrow(spf)
 
