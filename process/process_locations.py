@@ -12,12 +12,12 @@ global_words = ['globe', 'global', 'world', 'international', 'planet', 'countrie
 
 abstracts = pd.read_csv('abstracts.csv')
 abstracts = abstracts.fillna('')
-files = os.listdir('C://Git/mine-food-security/data/entities/')
+files = os.listdir('C://Users/matt/mine-food-security/data/entities/')
 eids = list(set(map(lambda x: x[:x.rfind('-')], files)))
 
 def process_file(filename):
     locations = defaultdict(int)
-    entities = json.loads(open('C://Git/mine-food-security/data/entities/' + filename, 'rb').read())
+    entities = json.loads(open('C://Users/matt/mine-food-security/data/entities/' + filename, 'rb').read())
     
     if "InvalidArgument" in entities:
         return {}
@@ -68,13 +68,17 @@ for eid in eids:
     
     data.append(temp)
     
-    print(eids.index(eid))
+    print(float(eids.index(eid))/float(len(eids)))
 
 df = pd.DataFrame(data)
-df.to_csv(FILES_DIR + "Locations.csv", index=False)
+df.to_csv(FILES_DIR + "Locations2.csv", index=False)
 
-f = open(FILES_DIR + 'All_Locations.csv', 'w+', encoding="utf-8")
-f.write('location,count\n')
+import io
+
+f = io.open(FILES_DIR + 'All_Locations2.csv', 'w+', encoding="utf-8")
+f.write(u'location,count\n')
 for d in all_locations:
+    if type(d) != unicode:
+        d = str(d).decode('utf-8')
     f.write('"' + d + '",' + str(all_locations[d]) + '\n')
 f.close()
