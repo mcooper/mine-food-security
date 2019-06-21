@@ -26,7 +26,7 @@ for loc in data['location']:
 
 files = [unicodedata.normalize('NFC', f) for f in os.listdir(OUT_DIR)]
 
-for loc in os.listdir(OUT_DIR):
+for loc in files:
     out = io.open(OUT_DIR + loc, 'rb+').read()
     
     if out == '':
@@ -44,6 +44,12 @@ for loc in os.listdir(OUT_DIR):
     
     form_address = res['formatted_address']
     data.loc[data.location==loc, 'formatted_address'] = form_address
+    
+    coords_location_type = res['geometry']['location_type']
+    data.loc[data.location==loc, 'coords_location_type'] = coords_location_type
+    
+    location_types = ', '.join(res['types'])
+    data.loc[data.location==loc, 'location_types'] = location_types
     
     latitude = res['geometry']['location']['lat']
     data.loc[data.location==loc, 'latitude'] = latitude
