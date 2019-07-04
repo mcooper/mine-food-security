@@ -12,7 +12,7 @@ setwd('G://My Drive/mine-food-security/CTMmods')
 
 load(paste0('ctm', k, '.Rdata'))
 
-labels <- read_xlsx(paste0('../CTM', k, ' - Topics_Final.xlsx')) %>%
+labels <- read_xlsx(paste0('../CTM', k, ' - Topics_Final Matt Update.xlsx')) %>%
   filter(`Topic Name` != '---- Mashup Topic -----' & Topic_Number != k)
 
 #Make Graph
@@ -22,7 +22,7 @@ graphmat <- matrix(nrow=(ctm@k - 1), ncol=(ctm@k - 1))
 rownames(graphmat) <- topics
 colnames(graphmat) <- topics
 
-lambda <- 0.5
+lambda <- 0.45
 
 for (i in topics){
   y <- mat[ , i]
@@ -64,7 +64,7 @@ simpleCap <- function(x) {
 }
 
 net %v% "Theme" <- sapply(labels$`Group Names`[topics], simpleCap)
-net %v% "Food Security Theme" <- sapply(labels$`Food Security category`[topics], simpleCap)
+net %v% "Food Security Pillar" <- sapply(labels$`Food Security category`[topics], simpleCap)
 net %v% "size" <- labels$Perc_of_Corpus[topics]
 net %v% "label" <- gsub(' ', '\n', sapply(labels$`Topic Name`, simpleCap))
 
@@ -74,21 +74,22 @@ net %v% "label" <- gsub(' ', '\n', sapply(labels$`Topic Name`, simpleCap))
 set.seed(50)
 dat <- ggnetwork(net, layout="fruchtermanreingold")
 
-ggplot(dat, aes(x = x, y = y, xend = xend, yend = yend)) + 
-  geom_edges() + 
-  geom_nodes(aes(size=size, color=`Theme`), alpha=0.9) + 
-  scale_size_area(guide='none', max_size=20) + 
-  geom_nodetext(aes(label=label), size=2) +
-  scale_color_brewer(palette = "Set3") + 
-  theme_blank()
-ggsave('C://Git/mine-food-security-tex/img/graph60_labels.png', width=11.5, height=6)
+# ggplot(dat, aes(x = x, y = y, xend = xend, yend = yend)) + 
+#   geom_edges() + 
+#   geom_nodes(aes(size=size, color=`Theme`), alpha=0.9) + 
+#   scale_size_area(guide='none', max_size=20) + 
+#   geom_nodetext(aes(label=label), size=2) +
+#   scale_color_brewer(palette = "Set3") + 
+#   theme_blank()
+# ggsave('C://Git/mine-food-security-tex/img/graph60_labels.png', width=11.5, height=6)
 
 ggplot(dat, aes(x = x, y = y, xend = xend, yend = yend)) + 
   geom_edges() + 
-  geom_nodes(aes(size=size, color=`Food Security Theme`), alpha=0.9) + 
+  geom_nodes(aes(size=size, color=`Food Security Pillar`), alpha=0.9) + 
   scale_size_area(guide='none', max_size=20) + 
   geom_nodetext(aes(label=label), size=2) +
   scale_color_brewer(palette = "Set3") + 
-  theme_blank()
-ggsave('C://Git/mine-food-security-tex/img/graph60_fslabels.png', width=11.5, height=6)
+  theme_blank() + 
+  guides(color=guide_legend(title="Food Security Pillar"))
+ggsave('C://Users/matt/mine-food-security-tex/img/graph60_fslabels.png', width=11.5, height=6)
 

@@ -10,7 +10,7 @@ simpleCap <- function(x) {
         sep="", collapse=" ")
 }
 
-dat <- read_xlsx('CTM60 - Topics_Final.xlsx') %>%
+dat <- read_xlsx('CTM60 - Topics_Final Matt Update.xlsx') %>%
   filter(`Topic Name` != '---- Mashup Topic -----') %>%
   arrange(`Group Names`, desc(Perc_of_Corpus)) %>%
   select(Perc_of_Corpus, `Group Names`, `Topic Name`, #`Food Security category`, 
@@ -26,6 +26,7 @@ dat <- read_xlsx('CTM60 - Topics_Final.xlsx') %>%
   mutate(Theme = simpleCap(Theme),
          #`FS Theme` = simpleCap(`FS Theme`),
          `Topic Label` = paste0('BOLD', simpleCap(`Topic Label`)),
+         `Theme` = gsub('&', '\\&', `Theme`, fixed = TRUE),
          `Top Four Words` = simpleCap(`Top Four Words`))
 
 bold <- function(x) {gsub('_', '-', gsub('BOLD(.*)',paste('\\\\textbf{\\1','}'),x))}
@@ -34,6 +35,6 @@ bold <- function(x) {gsub('_', '-', gsub('BOLD(.*)',paste('\\\\textbf{\\1','}'),
 tab <- xtable(dat, caption='Summary of identified topics', label='tab:topics', 
        align=c('l', 'l', 'r', 'r', 'r'))
 names(tab) <- names(dat)
-print(tab, file='C://Git/mine-food-security-tex/tables/topics.tex',
+print(tab, file='C://Users/matt/mine-food-security-tex/tables/topics.tex',
       include.rownames=F, include.colnames=T, sanitize.text.function=bold, 
       size="\\fontsize{9pt}{10pt}\\selectfont")

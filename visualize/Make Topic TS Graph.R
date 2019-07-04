@@ -1,6 +1,7 @@
 library(tidyverse)
 library(readxl)
 library(zoo)
+library(cowplot)
 
 setwd('G://My Drive/mine-food-security')
 
@@ -13,7 +14,7 @@ doc_topic <- read.csv('CTMmods/CTM60 - Doc Topic Matrix.csv') %>%
   mutate(topic = gsub('X', '', topic)) %>%
   rename(ind=X)
 
-labels <- read_excel('CTM60 - Topics_Final.xlsx') %>%
+labels <- read_excel('CTM60 - Topics_Final Matt Update.xlsx') %>%
   filter(`Topic Name` != '---- Mashup Topic -----') %>%
   select(topic=Topic_Number, Theme=`Group Names`, `FS Theme`=`Food Security category`)
 
@@ -43,14 +44,14 @@ ts <- all %>%
 
 #Time Series
 ts_plot <- ggplot(ts) + geom_area(aes(x=Year, y=value, fill=Theme)) + 
-  scale_x_continuous(expand=c(0,0), breaks=c(1985, 1995, 2005, 2015)) + 
+  scale_x_continuous(expand=c(0,0), breaks=c(1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015)) + 
   scale_y_continuous(expand=c(0,0)) +
   scale_fill_brewer(palette = "Set3") + 
   guides(fill=guide_legend(title="")) + 
   ylab('Proportion') + 
   xlab('') + 
   theme(legend.direction = "horizontal",
-        legend.position = c(0.5, -0.25),
+        legend.position = c(0.45, -0.2),
         legend.justification = 'center',
         plot.margin = unit(c(0, 0.25, 1.25, 0.25), "cm"))
 
@@ -71,5 +72,5 @@ hist <- ggplot(abstracts) +
 
 plot_grid(plotlist=list(hist, ts_plot), align='v', ncol=1, nrow=2, rel_heights=c(0.15,1), axis='rl')
 
-ggsave("C:/Users/matt/mine-food-security-tex/img/TimeSeries.png", width = 8, height = 4, units="in")
+ggsave("C:/Users/matt/mine-food-security-tex/img/TimeSeries.png", width = 9, height = 5, units="in")
 
