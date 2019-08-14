@@ -22,8 +22,9 @@ def getContinents(dict_str):
     res = []
     for loc in d:
         continent = loc_con.loc[loc_con['location']==loc, 'continent'].to_string(index=False)
-        for i in range(d[loc]):
-            res.append(continent)
+        if continent in ['Africa', 'Asia', 'LAC', 'First World']:
+            for i in range(d[loc]):
+                res.append(continent)
     return(res)
 
 def getCountries(dict_str):
@@ -43,8 +44,6 @@ def getCountries(dict_str):
     return(res)
 
 for i in abs_loc.index:
-    if i < 9087:
-        continue
     
     print(i)
     

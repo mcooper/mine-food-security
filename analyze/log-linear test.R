@@ -61,19 +61,9 @@ texreg(mod, caption='First-Order Log-Linear Model', label='tab:firstOrderLL',
 
 #Higher order theme model
 mod2 <- glm(value ~ (Region + Theme)^2, 
-                    data = theme_tab, family = poisson)
+            data = theme_tab, family = poisson)
 pchisq(deviance(mod2), df = df.residual(mod2), lower.tail = F)
 
 texreg(mod2, caption='Second-Order Log-Linear Model', label='tab:secondOrderLL', 
        custom.model.names='Model', longtable=TRUE, use.packages=FALSE,
        file='C://Users/matt/mine-food-security-tex/tables/secondOrderLL.tex')
-
-
-#Lower order topic model
-mod3 <- glm(value ~ con_verdict + topic, data=topic_tab, family=poisson)
-pchisq(deviance(mod3), df = df.residual(mod3), lower.tail = F)
-
-#Higher order topic model
-mod4 <- glm(value ~ (con_verdict + topic)^2, 
-            data = topic_tab, family = poisson)
-pchisq(deviance(mod4), df = df.residual(mod4), lower.tail = F)

@@ -83,7 +83,7 @@ my_breaks <- round(exp(seq(log(0.1), log(max(sp$Mentions_Per_Cap)), length.out=4
 ggplot() + 
   geom_polygon(data=robf,  aes(x=long, y=lat, group=group), fill='#CCCCCC') + 
   geom_polygon(data=spf2, aes(x=long, y=lat, group=group, fill=Mentions_Per_Cap), color='#FFFFFF', size=0.3) + 
-  geom_point(data=points@data, aes(x=x, y=y, color=lab), size=0.25, shape=3) + 
+  geom_point(data=points@data, aes(x=x, y=y, color=lab), size=0.25, shape=16) + 
   scale_fill_viridis(option='D', trans='log', breaks = my_breaks, labels = my_breaks, 
                      na.value="#440154", guide = guide_colorbar(title.position = "top")) + 
   theme_void()+
@@ -98,8 +98,7 @@ ggplot() +
         legend.box.background=element_rect(fill='#CCCCCC', color="#000000"),
         legend.box.margin=margin(t=4, r=4, b=4, l=4, unit='pt'),
         legend.direction='horizontal',
-        legend.box='vertical',
-        legend.title.align=0.5
+        legend.box='vertical'
         ) + 
   guides(colour = guide_legend(override.aes = list(size=2), title.position = 'top')) +
   scale_color_manual(values = "#000000", name='Toponyms in Abstracts') + 

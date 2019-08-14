@@ -33,34 +33,43 @@ ts <- abstracts_loc %>%
   mutate(value=value/sum(value))
 
 
+histdf <- abstracts_loc %>%
+  group_by(Year) %>%
+  summarize(count=n())
+
 #Time Series
 ts_plot <- ggplot(ts) + geom_area(aes(x=Year, y=value, fill=con_verdict)) + 
-  scale_x_continuous(expand=c(0,0), breaks=c(1985, 1995, 2005, 2015)) + 
-  scale_y_continuous(expand=c(0,0)) +
+  scale_x_continuous(expand=c(0,0), limits = c(1981, 2018)) + 
+  scale_y_continuous(expand=c(0,0), breaks=c(0.25, 0.5, 0.75, 1)) +
   scale_fill_brewer(palette = "Set3") + 
   guides(fill=guide_legend(title="")) + 
   ylab('Proportion') + 
   xlab('') + 
-  theme(legend.direction = "horizontal",
-        legend.position = c(0.5, -0.15),
-        legend.justification = 'center',
-        plot.margin = unit(c(0, 0.25, 0.70, 0.25), "cm"))
-
-hist <- ggplot(abstracts_loc) + 
-  geom_histogram(aes(x=Year), fill='#888888', color='#000000', binwidth=1) + 
-  scale_x_continuous(expand=c(0,0)) + 
-  scale_y_continuous(expand=c(0,0), breaks = c()) +
-  ylab('') + 
-  xlab('') +
+  theme_bw() + 
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
-        panel.background=element_blank(),
+        legend.position = 'none',
+        plot.margin = unit(c(0.25, 0.25, -0.06, 0.25), "cm"))
+
+ts_leg <- get_legend(ts_plot + theme(legend.direction = "horizontal",
+                                     legend.position = c(0.5, 0.9)))
+
+hist <- ggplot(histdf) + 
+  geom_bar(aes(x=Year, y=count), fill='#888888', color='#000000', stat='identity', width=1) + 
+  scale_x_continuous(expand=c(0,0), breaks=c(1985, 1990, 1995, 2000, 2005, 2010, 2015), limits = c(1980.5, 2018.5)) + 
+  scale_y_continuous(expand=c(0, 0, 0, 250), breaks = c(0, 1000)) +
+  ylab('Count') + 
+  xlab('') +
+  theme_bw() + 
+  theme(panel.background=element_blank(),
         panel.grid.major=element_blank(),
         panel.grid.minor=element_blank(),
         plot.background=element_blank(),
-        plot.margin = unit(c(0.25, 0.25, -0.11, 0.25), "cm"))
+        plot.margin = unit(c(-0.06, 0.25, 0, 0.25), "cm"))
 
-plot_grid(plotlist=list(hist, ts_plot), align='v', ncol=1, nrow=2, rel_heights=c(0.15,1), axis='rl')
+plot_grid(plot_grid(plotlist=list(ts_plot, hist), align='v', ncol=1, nrow=2, rel_heights=c(1,0.3), axis='rl',
+                    labels = "AUTO", label_x = c(0.08, 0.08), label_y=c(0.97, 0.98)),
+          ts_leg, ncol=1, rel_heights=c(1, 0.05))
 
-ggsave("C:/Users/matt/mine-food-security-tex/img/ByContinent-Year.png", width = 8, height = 4, units="in")
+ggsave("C:/Users/matt/mine-food-security-tex/img/ByContinent-Year.png", width = 8, height = 5, units="in")
