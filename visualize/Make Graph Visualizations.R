@@ -74,15 +74,6 @@ net %v% "label" <- gsub(' ', '\n', sapply(labels$`Topic Name`, simpleCap))
 set.seed(50)
 dat <- ggnetwork(net, layout="fruchtermanreingold")
 
-# ggplot(dat, aes(x = x, y = y, xend = xend, yend = yend)) + 
-#   geom_edges() + 
-#   geom_nodes(aes(size=size, color=`Theme`), alpha=0.9) + 
-#   scale_size_area(guide='none', max_size=20) + 
-#   geom_nodetext(aes(label=label), size=2) +
-#   scale_color_brewer(palette = "Set3") + 
-#   theme_blank()
-# ggsave('C://Git/mine-food-security-tex/img/graph60_labels.png', width=11.5, height=6)
-
 ggplot(dat, aes(x = x, y = y, xend = xend, yend = yend)) + 
   geom_edges() + 
   geom_nodes(aes(size=size, color=`Food Security Pillar`), alpha=0.9) + 
