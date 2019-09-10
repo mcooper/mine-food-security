@@ -65,6 +65,13 @@ for (lambda in seq(0.05, 1, 0.05)){
   }
 }
 
+l <- data.frame()
+for (i in seq(1, 59)){
+  l <- bind_rows(l,
+                 data.frame(topic=i,
+                            degrees=sum(edgelist$lambda[edgelist$i==i]) + sum(edgelist$lambda[edgelist$j==i])))
+}
+
 write.csv(edgelist %>% 
             rename(Source=i, Target=j) %>%
             filter(Source %in% labels$Topic_Number & Target %in% labels$Topic_Number), 

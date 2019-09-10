@@ -7,31 +7,41 @@ library(ggrepel)
 library(pals)
 library(Hmisc)
 library(cowplot)
+library(rgdal)
 
 dat <- read.csv('Mentions_Per_Cap.csv')
 
 gfsi <- read.csv('Objective Metrics/EIU Global Food Security Index/GFSI.csv') %>%
   mutate(iso3c = countrycode(Country, 'country.name', 'iso3c'),
-         iso2c = countrycode(Country, 'country.name', 'iso2c'))
+         iso2c = countrycode(Country, 'country.name', 'iso2c')) %>%
+  rename(Objective = GFSI)
 
-comb <- merge(gfsi, dat, all.x=T, all.y=F)
-# 
+voth <- read.csv('Objective Metrics/FAO Voices of the Hungry/VotH_clean.csv') %>%
+  mutate(iso3c = countrycode(Country, 'country.name', 'iso3c'),
+         iso2c = countrycode(Country, 'country.name', 'iso2c'),
+         Objective = 100 - Mod_Prev)
+
+voth$iso3c[voth$Country == 'Kosovo'] <- "KOS"
+
+comb <- merge(voth, dat, all.x=T, all.y=F)
+
 ggplot(comb) +
-  geom_text_repel(aes(x=GFSI, y=log(Mentions_Per_Cap), label=iso2c), segment.alpha=0) +
-  scale_x_continuous(expand = c(0, 0), ) +
+  geom_text_repel(aes(x=Objective, y=log(Mentions_Per_Cap), label=iso2c), segment.alpha=0) +
+  scale_x_continuous(expand = c(0, 0), labels = function(x){100 - x}) +
   scale_y_continuous(expand = c(0, 0), labels = function(x){round(exp(x), 1)}) +
   theme_bw() +
-  xlab('Global Food Security Index') +
-  ylab('')
+  xlab('Prevalence of Moderate and Severe Food Insecurity') +
+  ylab('Articles Per Million People')
+
+ggsave('C://Users/matt/mine-food-security-tex/img/Bivariate_Graph.png', width=10, height=6)
 
 comb$Mentions_Per_Cap_Log <- log(comb$Mentions_Per_Cap)
 
 comb$mentions_q <- as.numeric(cut2(comb$Mentions_Per_Cap_Log, g=3))
-comb$gfsi_q <- as.numeric(cut2(comb$GFSI, g=3))
+comb$Objective_q <- as.numeric(cut2(comb$Objective, g=3))
 
 #Get a bivariate palette
 #There are a lot of options, see here: https://rdrr.io/cran/pals/man/bivariate.html
-
 
 sp <- readOGR('G://My Drive/DHS Spatial Covars/Global Codes and Shapefile', 'ne_50m_admin_0_countries')
 sp <- sp[ , c('SOVEREIGNT')]
@@ -45,7 +55,7 @@ sp$iso3c[sp$SOVEREIGNT=='Kosovo'] <- "KOS"
 
 pal_ix <- apply(t(matrix(1:9, nrow=3)), 2, rev)
 
-comb$color <- mapply(FUN=function(x, y){pal_ix[x, y]}, x=comb$mentions_q, y=comb$gfsi_q) %>%
+comb$color <- mapply(FUN=function(x, y){pal_ix[x, y]}, x=comb$mentions_q, y=comb$Objective_q) %>%
   as.factor
 
 spnew <- merge(sp, comb)
@@ -96,18 +106,18 @@ map <- ggplot() +
 map
 
 leg_dat <- comb %>%
-  dplyr::select(mentions_q, gfsi_q, color) %>%
+  dplyr::select(mentions_q, Objective_q, color) %>%
   unique
 
 legend <- ggplot() +
   geom_point(data = data.frame(x=1, y=1, color=factor(1)), aes(x=x, y=x, color=color), 
              size=10, shape=15) + 
-  geom_tile(data = leg_dat, aes(x=gfsi_q, y=mentions_q, fill=color),
+  geom_tile(data = leg_dat, aes(x=Objective_q, y=mentions_q, fill=color),
             show.legend=FALSE) +
-  scale_color_manual(values = c(`1`='#aaaaaa'), name="Missing GFSI Data", labels=NULL) + 
+  scale_color_manual(values = c(`1`='#aaaaaa'), name="Missing VotH Data", labels=NULL) + 
   scale_fill_manual(values = palette) +
-  labs(x = "More Food Secure →️",
-       y = "More Researched →️") +
+  labs(x = sprintf("More Food Secure \u2192"),
+       y = sprintf("More Researched \u2192")) +
   theme(axis.ticks.x=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks.y=element_blank(),
@@ -123,7 +133,7 @@ legend
 
 ggdraw() +
   draw_plot(map, 0, 0, 1, 1) +
-  draw_plot(legend, -0.2, 0.025, 0.6, 0.6)
+  draw_plot(legend, -0.175, 0.025, 0.575, 0.575)
 
 ggsave('C://Users/matt/mine-food-security-tex/img/Bivariate_Map.png', width=10, height=5)
 
