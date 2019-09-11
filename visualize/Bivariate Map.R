@@ -23,19 +23,27 @@ voth <- read.csv('Objective Metrics/FAO Voices of the Hungry/VotH_clean.csv') %>
 
 voth$iso3c[voth$Country == 'Kosovo'] <- "KOS"
 
-comb <- merge(voth, dat, all.x=T, all.y=F)
+comb <- merge(gfsi, dat, all.x=T, all.y=F)
+
+comb$Mentions_Per_Cap_Log <- log(comb$Mentions_Per_Cap)
+
+sel <- comb %>%
+  select(Objective, Mentions_Per_Cap, Mentions_Per_Cap_Log) %>%
+  na.omit %>%
+  filter(!is.infinite(Mentions_Per_Cap_Log))
+
+cor(sel$Mentions_Per_Cap_Log, sel$Objective)
 
 ggplot(comb) +
   geom_text_repel(aes(x=Objective, y=log(Mentions_Per_Cap), label=iso2c), segment.alpha=0) +
-  scale_x_continuous(expand = c(0, 0), labels = function(x){100 - x}) +
+  scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0), labels = function(x){round(exp(x), 1)}) +
   theme_bw() +
-  xlab('Prevalence of Moderate and Severe Food Insecurity') +
+  xlab('Global Food Security Index') +
   ylab('Articles Per Million People')
 
 ggsave('C://Users/matt/mine-food-security-tex/img/Bivariate_Graph.png', width=10, height=6)
 
-comb$Mentions_Per_Cap_Log <- log(comb$Mentions_Per_Cap)
 
 comb$mentions_q <- as.numeric(cut2(comb$Mentions_Per_Cap_Log, g=3))
 comb$Objective_q <- as.numeric(cut2(comb$Objective, g=3))
@@ -114,7 +122,7 @@ legend <- ggplot() +
              size=10, shape=15) + 
   geom_tile(data = leg_dat, aes(x=Objective_q, y=mentions_q, fill=color),
             show.legend=FALSE) +
-  scale_color_manual(values = c(`1`='#aaaaaa'), name="Missing VotH Data", labels=NULL) + 
+  scale_color_manual(values = c(`1`='#aaaaaa'), name="Missing GFSI Data", labels=NULL) + 
   scale_fill_manual(values = palette) +
   labs(x = sprintf("More Food Secure \u2192"),
        y = sprintf("More Researched \u2192")) +
