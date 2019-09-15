@@ -1,2 +1,5 @@
 *keys.json
-data/*
+data/abstracts/
+data/entities/
+data/keywords/
+data/locations/
