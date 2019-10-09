@@ -143,8 +143,10 @@ ggdraw() +
   draw_plot(map, 0, 0, 1, 1) +
   draw_plot(legend, -0.175, 0.025, 0.575, 0.575)
 
-ggsave('C://Users/matt/mine-food-security-tex/img/Bivariate_Map.eps', width=10, height=5)
+ggsave('C://Users/matt/mine-food-security-tex/img/Bivariate_Map.png', width=10, height=5)
+#Note: because ggsave() cant handle the unicode in the legend with EPS, must run:
 
+#convert Bivariate_Map.png Bivariate_Map.eps
 
 
 
