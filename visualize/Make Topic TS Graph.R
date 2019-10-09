@@ -81,5 +81,5 @@ plot_grid(plot_grid(plotlist=list(ts_plot, hist), align='v', ncol=1, nrow=2, rel
                     labels = "AUTO", label_x = c(0.08, 0.08), label_y=c(0.97, 0.98)),
           ts_leg, ncol=1, rel_heights=c(1, 0.1))
 
-ggsave("C:/Users/matt/mine-food-security-tex/img/TimeSeries.png", width = 9, height = 5, units="in")
+ggsave("C:/Users/matt/mine-food-security-tex/img/TimeSeries.eps", width = 9, height = 5, units="in")
 

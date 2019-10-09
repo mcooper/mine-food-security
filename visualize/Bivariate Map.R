@@ -42,7 +42,7 @@ ggplot(comb) +
   xlab('Global Food Security Index') +
   ylab('Articles Per Million People')
 
-ggsave('C://Users/matt/mine-food-security-tex/img/Bivariate_Graph.png', width=10, height=6)
+ggsave('C://Users/matt/mine-food-security-tex/img/Bivariate_Graph.eps', width=10, height=6)
 
 
 comb$mentions_q <- as.numeric(cut2(comb$Mentions_Per_Cap_Log, g=3))
@@ -143,7 +143,7 @@ ggdraw() +
   draw_plot(map, 0, 0, 1, 1) +
   draw_plot(legend, -0.175, 0.025, 0.575, 0.575)
 
-ggsave('C://Users/matt/mine-food-security-tex/img/Bivariate_Map.png', width=10, height=5)
+ggsave('C://Users/matt/mine-food-security-tex/img/Bivariate_Map.eps', width=10, height=5)
 
 
 

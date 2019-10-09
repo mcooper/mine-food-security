@@ -37,4 +37,4 @@ ggplot(all) +
   geom_vline(aes(xintercept=60), color='darkred', linetype=2) +
   xlab('Number of Topics')
 
-ggsave('C://Git/mine-food-security-tex/img/evaluation.png', width=6, height=4.5)
+ggsave('C://Users/matt/mine-food-security-tex/img/evaluation.eps', width=6, height=4.5)

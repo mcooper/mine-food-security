@@ -105,6 +105,6 @@ ggplot() +
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0))
 
-ggsave('C://Users/matt/mine-food-security-tex/img/Mentions_Map2.png', width=11, height=5)
+ggsave('C://Users/matt/mine-food-security-tex/img/Mentions_Map2.eps', width=11, height=5)
 
 
