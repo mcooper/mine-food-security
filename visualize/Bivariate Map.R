@@ -45,8 +45,10 @@ ggplot(comb) +
 ggsave('C://Users/matt/mine-food-security-tex/img/Bivariate_Graph.eps', width=10, height=6)
 
 
-comb$mentions_q <- as.numeric(cut2(comb$Mentions_Per_Cap_Log, g=3))
-comb$Objective_q <- as.numeric(cut2(comb$Objective, g=3))
+comb$mentions_c <- cut2(comb$Mentions_Per_Cap_Log, g=3)
+comb$mentions_q <- as.numeric(comb$mentions_c)
+comb$Objective_c <- cut2(comb$Objective, g=3)
+comb$Objective_q <- as.numeric(comb$Objective_c)
 
 #Get a bivariate palette
 #There are a lot of options, see here: https://rdrr.io/cran/pals/man/bivariate.html
@@ -126,16 +128,14 @@ legend <- ggplot() +
   scale_fill_manual(values = palette) +
   labs(x = sprintf("More Food Secure \u2192"),
        y = sprintf("More Researched \u2192")) +
-  theme(axis.ticks.x=element_blank(),
-        axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(),
-        axis.text.x=element_blank(),
-        legend.position="bottom",
+  theme(legend.position="bottom",
         legend.key = element_blank(),
         axis.title = element_text(size = 10),
         legend.title = element_text(size = 10)) + 
-  scale_x_continuous(expand=c(0,0)) + 
-  scale_y_continuous(expand=c(0,0)) + 
+  scale_x_continuous(expand=c(0,0), breaks=NULL,
+                     sec.axis = dup_axis(name="Global Food Security Index", breaks = c(0.5, 1.5, 2.5, 3.5), labels = c(24, 51, 70, 86))) + 
+  scale_y_continuous(expand=c(0,0), breaks = NULL,
+                     sec.axis = dup_axis(name="Articles Per Million People", breaks = c(0.5, 1.5, 2.5, 3.5), labels = c(0, 0.6, 1.9, 20))) + 
   coord_fixed()
 legend
 
