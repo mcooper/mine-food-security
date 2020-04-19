@@ -6,7 +6,8 @@ library(rjson)
 library(ggplot2)
 library(countrycode)
 library(sf)
-
+library(viridis)
+library(ape)
 library(ggrepel)
 library(pals)
 library(Hmisc)
@@ -62,54 +63,154 @@ cty <- ne_countries(returnclass='sf') %>%
   group_by(iso3c) %>%
   summarise()
 
-locs <- read_csv('Abstract_locations_classified.csv') %>%
-  select(EID, loc_abstract, loc_keywords, loc_title) %>%
-  group_by(EID) %>%
-  #Make unique row for each place
-  expand(location = c(names(fromJSON(loc_abstract)),
-                      names(fromJSON(loc_keywords)),
-                      names(fromJSON(loc_title)))) %>%
-  #Get the year
-  merge(read.csv('abstracts_final.csv') %>% 
-          select(EID, year=Year)) %>%
-  #get the country of each place
-  merge(read_xlsx('all_locations_processed_manual2.xlsx') %>%
-          select(location, latitude, longitude) %>%
-          mutate(latitude=ifelse(is.na(latitude), 0, latitude),
-                 longitude=ifelse(is.na(longitude), 0, longitude)) %>%
-          st_as_sf(coords=c('longitude', 'latitude'), crs=4326) %>%
-          st_join(cty) %>%
-          filter(!is.na(iso3c))) %>%
-  #get country-year counts of mentions
+pts <- read_xlsx('all_locations_processed_manual2.xlsx') %>%
+  select(location, latitude, longitude) %>%
+  mutate(latitude=ifelse(is.na(latitude), 0, latitude),
+         longitude=ifelse(is.na(longitude), 0, longitude)) %>%
+  st_as_sf(coords=c('longitude', 'latitude'), crs=4326) %>%
+  st_join(cty) %>%
+  filter(!is.na(iso3c)) %>%
+  merge(read_csv('Abstract_locations_classified.csv') %>%
+          select(EID, loc_abstract, loc_keywords, loc_title) %>%
+          group_by(EID) %>%
+          #Make unique row for each place
+          expand(location = c(names(fromJSON(loc_abstract)),
+                              names(fromJSON(loc_keywords)),
+                              names(fromJSON(loc_title)))) %>%
+          #Get the year
+          merge(read.csv('abstracts_final.csv') %>% 
+                  select(EID, year=Year)))
+
+#get country-year counts of mentions
+locs <- pts %>%
+  st_drop_geometry() %>%
   group_by(iso3c, year) %>%
   summarise(locs=n())
 
+Eswatini
+Micronesia
+Japan
+
+#Get number of undernourished people
+sdg <- read_xlsx('SDG 2.1.1.xlsx') %>%
+  mutate(iso3c = case_when(GeoAreaName=='Eswatini' ~ 'SWZ',
+                           TRUE ~ countrycode(GeoAreaName, 'country.name', 'iso3c')),
+         pop_under = as.numeric(gsub('<', '', Value))) %>%
+  select(year=TimePeriod, iso3c, pop_under)
+
 comb <- Reduce(function(x, y){merge(x, y, all.x=T, all.y=T)},
-               list(proteus, locs)) %>%
-  filter(year >= 1990, year <= 2017, !is.na(proteus)) %>%
+               list(pubs, pop, proteus, locs, sdg)) %>%
   mutate(pubs = ifelse(is.na(pubs), 0, pubs),
          pubs_per_mil = pubs/(pop/1000000),
-         locs_per_mil = locs/(pop/1000000))
+         pubs_per_und = pubs/pop_under)
+
+cutseq <- c(1959, 1985, 1995, 2005, 2012, 2019)
 
 comb5yrs <- comb %>%
-  filter(year >= 1993) %>%
-  mutate(bidecade = cut(year, seq(1992, 2017, 5))) %>%
+  mutate(bidecade = cut(year, cutseq)) %>%
   group_by(iso3c, bidecade) %>%
   summarise(pubs=sum(pubs),
             pop=mean(pop),
-            proteus=mean(proteus),
-            locs=sum(locs)) %>%
-  mutate(pubs_per_mil=pubs/(pop/1000000),
-         locs_per_mil=pubs/(pop/1000000))
+            proteus=mean(proteus, na.rm=T),
+            pubs_per_mil=mean(pubs_per_mil, na.rm=T),
+            pubs_per_und=mean(pubs_per_und, na.rm=T))
+
+pts5yrs <- pts %>%
+  mutate(bidecade = cut(year, cutseq))
 
 #################################
 #Look at proteus vs pubs_per_mil
 ##################################
 
-ggplot(comb) + 
-  geom_point(aes(x=proteus, y=log(pubs_per_mil + 1)))
+mapdat <- cty %>%
+  merge(comb5yrs)
 
-cor(comb$proteus, log(comb$pubs_per_mil + 1))
+newmatdat <- cty %>%
+  merge(comb %>% 
+          filter(year > 2012) %>%
+          group_by(iso3c) %>% 
+          summarise(pubs_per_mil=mean(pubs_per_mil, na.rm=T),
+                    pubs_per_und=mean(pubs_per_und, na.rm=T))) %>%
+  filter(!is.na(pubs_per_mil))
+
+newmatdatproj <- newmatdat %>%
+  st_transform(crs = CRS('+proj=tpeqd +lat_1=0 +lon_1=0 +lat_2=45.56 +lon_2=90.56')) %>%
+  st_centroid()
+
+dm <- as.matrix(dist(newmatdatproj %>% st_coordinates))
+
+dm.inv <- 1/dm
+diag(dm.inv) <- 0
+
+Moran.I(newmatdatproj$pubs_per_und, dm.inv, na.rm=T)$p.value
+
+
+ggplot() + 
+  geom_sf(data=newmatdat, aes(fill=pubs_per_und)) + 
+  scale_fill_viridis()
+
+
+formatlabs <- function(str){
+    start <- substr(str, 2, 5)
+    end <- substr(str, 7, 10)
+    paste0(as.numeric(start) + 1, '-', end)
+}
+
+levels(mapdat$bidecade) <- formatlabs(levels(mapdat$bidecade))
+levels(pts5yrs$bidecade) <- formatlabs(levels(pts5yrs$bidecade))
+
+pts5yrs$lab <- ''
+
+
+newmatdat$pubs_per_mil[newmatdat$pubs_per_mil > 0.25] <- 0.25
+
+ggplot() + 
+  geom_sf(data=newmatdat, aes(fill=pubs_per_mil))
+
+ggplot() + 
+  geom_sf(data = mapdat, aes(fill=pubs_per_und), 
+          color='transparent') + 
+  geom_sf(data = pts5yrs, aes(color=lab), size=0.25, linetype=18) + 
+  scale_fill_viridis() + 
+  scale_color_manual(values="#000000") +
+  facet_wrap(bidecade ~ ., nrow=2) + 
+  theme_void() + 
+  theme(legend.position=c(0.8, 0.2),
+        legend.direction = 'horizontal',
+        legend.box = 'vertical') + 
+  guides(fill = guide_legend(title.position="top", title.hjust = 0.5))
+
+ggplot() + 
+  geom_sf(data = mapdat, aes(fill=log(locs_per_mil*10+1)), 
+          color='transparent') + 
+  #geom_sf(data = pts5yrs) + 
+  scale_fill_viridis() + 
+  facet_wrap(bidecade ~ ., nrow=2) + 
+  theme_void()
+
+for (i in levels(mapdat$bidecade)){
+  print(i)
+  
+  sel <- mapdat %>% 
+    filter(bidecade == i, !is.na(pubs_per_mil)) %>%
+    st_transform(crs = CRS('+proj=tpeqd +lat_1=0 +lon_1=0 +lat_2=45.56 +lon_2=90.56')) %>%
+    st_centroid()
+  
+  with(sel %>% 
+         na.omit, 
+       cor(proteus, log(locs_per_mil + 1))) %>%
+    print
+  
+  dm <- as.matrix(dist(sel %>% st_coordinates))
+  
+  dm.inv <- 1/dm
+  diag(dm.inv) <- 0
+  
+  print(Moran.I(log(sel$locs_per_mil + 1), dm.inv)$p.value)
+  
+}
+
+
 
 ggplot(comb5yrs %>%
          filter(bidecade=='(2012,2017]')) +

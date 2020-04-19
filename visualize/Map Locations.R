@@ -82,8 +82,8 @@ my_breaks <- round(exp(seq(log(0.1), log(max(sp$Mentions_Per_Cap)), length.out=4
 
 ggplot() + 
   geom_polygon(data=robf,  aes(x=long, y=lat, group=group), fill='#CCCCCC') + 
-  geom_polygon(data=spf2, aes(x=long, y=lat, group=group, fill=Mentions_Per_Cap), color='#FFFFFF', size=0.3) + 
-  geom_point(data=points@data, aes(x=x, y=y, color=lab), size=0.25, shape=16) + 
+  geom_polygon(data=spf2, aes(x=long, y=lat, group=group, fill=Mentions_Per_Cap, alpha=Mentions_Per_Cap < 0.15), color='#FFFFFF', size=0.3) + 
+  geom_point(data=points@data, aes(x=x, y=y, color=lab), size=0.25, shape=18) + 
   scale_fill_viridis(option='D', trans='log', breaks = my_breaks, labels = my_breaks, 
                      na.value="#440154", guide = guide_colorbar(title.position = "top")) + 
   theme_void()+
@@ -100,11 +100,12 @@ ggplot() +
         legend.direction='horizontal',
         legend.box='vertical'
         ) + 
-  guides(colour = guide_legend(override.aes = list(size=2), title.position = 'top')) +
+  guides(colour = guide_legend(override.aes = list(size=2), title.position = 'top'), alpha=FALSE) +
   scale_color_manual(values = "#000000", name='Toponyms in Abstracts') + 
   scale_x_continuous(expand = c(0, 0)) +
-  scale_y_continuous(expand = c(0, 0))
+  scale_y_continuous(expand = c(0, 0)) + 
+  scale_alpha_manual(values=c(1, 0.65))
 
-ggsave('C://Users/matt/mine-food-security-tex/img/Mentions_Map2.eps', width=11, height=5)
-
+ggsave('C://Users/matt/mine-food-security-tex/img/Mentions_Map2.pdf', width=11, height=5)
+  
 
