@@ -10,7 +10,7 @@ abs_new = pd.read_csv("abstracts_final.csv")
 
 abs_loc = abs_loc.loc[abs_loc.EID.isin(abs_new.EID), ]
 
-loc_con = pd.read_csv("all_locations_processed_manual2_continents.csv")
+loc_con = pd.read_csv("all_locations_processed_manual2_continents.csv", encoding='latin-1')
 
 def getContinents(dict_str):
     if pd.isnull(dict_str):
@@ -95,7 +95,7 @@ for i in abs_loc.index:
         
         #Else Global
         else:
-            verdict = "No Regional Focus"
+            verdict = "Global"
     
     #If there are more than 2 unique values
     else:
@@ -114,7 +114,7 @@ for i in abs_loc.index:
     
         #else it's global
         else:
-            verdict = "No Regional Focus"
+            verdict = "Global"
     
     abs_loc.loc[i, 'con_abstact'] = str(dict(Counter(abs_con)))
     abs_loc.loc[i, 'con_title'] = str(dict(Counter(tit_con)))
@@ -149,4 +149,4 @@ for i in abs_loc.index:
         abs_loc.loc[i, 'cty_verdict'] = cty
     
 
-abs_loc.to_csv('Abstract_locations_classified.csv', index=False, encoding='utf-8')
+abs_loc.to_csv('Abstract_locations_classified2.csv', index=False, encoding='utf-8')
