@@ -111,48 +111,30 @@ sp <- cty %>%
   merge(comb %>%
           group_by(iso3c) %>%
           summarise(pubs_per_mil_per_year = mean(pubs_per_mil)))
-sp$pubs_per_mil_per_year[sp$pubs_per_mil_per_year > 0.4] <- 0.4
 
-bckgd <- c(seq(-180, 180, 1), rep(180, 146), seq(180, -180, -1), rep(-180, 146),
-           rep(-56, 360),     seq(-56, 90, 1), rep(90, 360), seq(90, -56, -1)) %>%
-  matrix(ncol=2) %>%
-  list %>%
-  st_polygon %>%
-  st_sfc
-st_crs(bckgd) <- st_crs(sp)
+my_breaks <- c(0.0002, 0.002, 0.02, 0.2)
 
-my_breaks <- c(0.001, 0.01, 0.1, 0.4)
+sp$pubs_per_mil_per_year[sp$pubs_per_mil_per_year > max(my_breaks)] <- max(my_breaks)
   
-map <- ggplot() + 
-  geom_point(data=data.frame(x=0, y=0, lab='a'), aes(x=x, y=y, color=lab), size=0.25, shape=18) + 
-  geom_sf(data=bckgd, fill='#CCCCCC') + 
+(map <- ggplot() + 
+  geom_point(data=data.frame(x=1000000, y=1000000, lab='a'), aes(x=x, y=y, color=lab), size=0.25, shape=18) + 
   geom_sf(data=sp, aes(fill=pubs_per_mil_per_year, alpha=pubs_per_mil_per_year < 0.001), color='#FFFFFF', size=0.3) + 
   geom_sf(data=pts, size=0.25, shape=18) + 
   scale_fill_viridis(option='D', trans='log',
                      na.value="#440154", guide = guide_colorbar(title.position = "top"),
-                     labels=my_breaks, breaks=my_breaks) + 
-  theme_void() +
-  labs(fill="Food Security Abstracts Per Million People") + 
-  theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.title.y=element_blank(),
-        axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(),
-        legend.position=c(0.145, 0.15),
-        legend.box.background=element_rect(fill='#CCCCCC', color="#000000"),
-        legend.box.margin=margin(t=4, r=4, b=4, l=4, unit='pt'),
-        legend.direction='horizontal',
-        legend.box='vertical'
-  ) + 
-  guides(colour = guide_legend(override.aes = list(size=2), title.position = 'top'), alpha=FALSE) +
-  scale_color_manual(values = "#000000", labels=NULL, name='Toponyms in Abstracts') + 
+                     labels=my_breaks, breaks=my_breaks,
+                     limits=c(min(my_breaks), max(my_breaks))) + 
+  labs(fill="Food Security\nAbstracts Per\nMillion People\nPer Year", 
+       title = "All Years") + 
+  theme_void() + 
+  scale_color_manual(values = "#000000", labels=NULL, name='Toponyms in\nAbstracts') + 
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) + 
   scale_alpha_manual(values=c(1, 0.75)) + 
-  coord_sf(crs=CRS("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"))
-
-ggsave(plot = map, filename = 'C://Users/matt/mine-food-security-tex/img/Per_Cap_Map.pdf', width=10.5, height=4.5)
+  guides(colour = guide_legend(override.aes = list(size=2), title.position = 'top'), alpha=FALSE) +
+  coord_sf(crs=CRS("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs")) + 
+  theme(plot.margin = unit(c(0, -0.05, 0, -2), "cm"),
+        plot.title = element_text(hjust = 0.5)))
 
 ###########################################################
 # Same thing, but over separate periods
@@ -172,10 +154,6 @@ comb5yrs <- comb %>%
 pts5yrs <- pts %>%
   mutate(bidecade = cut(year, cutseq))
 
-mapdat5yrs <- cty %>%
-  merge(comb5yrs)
-
-
 formatlabs <- function(str){
   start <- substr(str, 2, 5)
   end <- substr(str, 7, 10)
@@ -183,40 +161,51 @@ formatlabs <- function(str){
   paste0(as.numeric(start) + 1, '-', end)
 }
 
-levels(mapdat5yrs$bidecade) <- formatlabs(levels(mapdat5yrs$bidecade))
+levels(comb5yrs$bidecade) <- formatlabs(levels(comb5yrs$bidecade))
 levels(pts5yrs$bidecade) <- formatlabs(levels(pts5yrs$bidecade))
 
-my_breaks <- c(0.0001, 0.001, 0.01, 0.1, 1)
 
-map2 <- ggplot() + 
-  geom_point(data=data.frame(x=0, y=0, lab='a', bidecade=levels(mapdat5yrs$bidecade)), aes(x=x, y=y, color=lab), size=0.25, shape=18) + 
-#  geom_sf(data=bckgd, fill='#CCCCCC') + 
-  geom_sf(data=mapdat5yrs, aes(fill=pubs_per_mil_per_year, alpha=pubs_per_mil_per_year < 0.001), color='#FFFFFF', size=0.3) + 
-  geom_sf(data=pts5yrs, size=0.25, shape=18) + 
+mapdat5yrs <- cty %>%
+  merge(comb5yrs)
+
+mapdat5yrs$pubs_per_mil_per_year[mapdat5yrs$pubs_per_mil_per_year > max(my_breaks)] <- max(my_breaks)
+
+(map2 <- ggplot() + 
+  geom_point(data=data.frame(x=1000000, y=1000000, lab='a', bidecade=unique(mapdat5yrs$bidecade)), aes(x=x, y=y, color=lab), size=0.25, shape=18, show.legend = F) + 
+  geom_sf(data=mapdat5yrs, aes(fill=pubs_per_mil_per_year, alpha=pubs_per_mil_per_year < 0.001), color='#FFFFFF', size=0.1, show.legend = F) + 
+  geom_sf(data=pts5yrs, size=0.1, shape=18, show.legend = F) + 
   scale_fill_viridis(option='D', trans='log',
                      na.value="#440154", guide = guide_colorbar(title.position = "top"),
-                     labels=my_breaks, breaks=my_breaks) + 
+                     labels=my_breaks, breaks=my_breaks,
+                     limits=c(min(my_breaks), max(my_breaks))) + 
   theme_void() +
-  labs(fill="Food Security Abstracts Per Million People") + 
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
         axis.title.y=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks.y=element_blank(),
-        legend.position=c(0.75, 0.15)#,
+        panel.spacing = unit(-0.5, "lines")
         #legend.direction='horizontal',
         #legend.box='vertical'
   ) + 
-  guides(colour = guide_legend(override.aes = list(size=2), title.position = 'top'), alpha=FALSE) +
-  scale_color_manual(values = "#000000", labels=NULL, name='Toponyms in Abstracts') + 
+  scale_color_manual(values = "#000000", labels=NULL) + 
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) + 
   scale_alpha_manual(values=c(1, 0.75)) + 
   coord_sf(crs=CRS("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs")) + 
-  facet_wrap(. ~ bidecade, nrow = 3)
+  facet_wrap(. ~ bidecade, nrow = 1))
 
-ggsave(plot=map2, filename = 'C://Users/matt/mine-food-security-tex/img/Per_Cap_Map2.pdf', width=10, height=8)
+ggsave(plot=map2, filename = 'C://Users/matt/mine-food-security-tex/img/Per_Cap_Map2.pdf', width=8, height=5)
+
+######################################################################################
+# Map plot of both maps together
+################################################################################
+
+plot_grid(plotlist=list(map, map2), align='v', ncol=1, nrow=2, rel_heights=c(1, 0.25))
+
+ggsave('C://Users/matt/mine-food-security-tex/img/NewMap.png',
+       width = 7, height=4)
 
 #############################################################
 #Conduct Morans I tests on all data, and by year grouping
