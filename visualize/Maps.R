@@ -114,24 +114,28 @@ sp <- cty %>%
 
 my_breaks <- c(0.0002, 0.002, 0.02, 0.2)
 
-sp$pubs_per_mil_per_year[sp$pubs_per_mil_per_year > max(my_breaks)] <- max(my_breaks)
+my_breakslab <- c('< 0.0002', '0.002', '0.02', '> 0.2')
+
+sp$pubs_per_mil_per_year_cut <- sp$pubs_per_mil_per_year
+sp$pubs_per_mil_per_year_cut[sp$pubs_per_mil_per_year > max(my_breaks)] <- max(my_breaks)
   
 (map <- ggplot() + 
-  geom_point(data=data.frame(x=1000000, y=1000000, lab='a'), aes(x=x, y=y, color=lab), size=0.25, shape=18) + 
-  geom_sf(data=sp, aes(fill=pubs_per_mil_per_year, alpha=pubs_per_mil_per_year < 0.001), color='#FFFFFF', size=0.3) + 
-  geom_sf(data=pts, size=0.25, shape=18) + 
+  #geom_point(data=data.frame(x=1000000, y=1000000, lab='a'), aes(x=x, y=y, color=lab), size=0.1, shape=18) + 
+  geom_sf(data=sp, aes(fill=pubs_per_mil_per_year_cut#, alpha=pubs_per_mil_per_year < 0.001
+                       ), color='#444444', size=0.25) + 
+  #geom_sf(data=pts, size=0.25, shape=18) + 
   scale_fill_viridis(option='D', trans='log',
                      na.value="#440154", guide = guide_colorbar(title.position = "top"),
-                     labels=my_breaks, breaks=my_breaks,
+                     labels=my_breakslab, breaks=my_breaks,
                      limits=c(min(my_breaks), max(my_breaks))) + 
   labs(fill="Food Security\nAbstracts Per\nMillion People\nPer Year", 
        title = "All Years") + 
   theme_void() + 
-  scale_color_manual(values = "#000000", labels=NULL, name='Toponyms in\nAbstracts') + 
+  #scale_color_manual(values = "#000000", labels=NULL, name='Toponyms in\nAbstracts') + 
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) + 
   scale_alpha_manual(values=c(1, 0.75)) + 
-  guides(colour = guide_legend(override.aes = list(size=2), title.position = 'top'), alpha=FALSE) +
+  #guides(colour = guide_legend(override.aes = list(size=2), title.position = 'top'), alpha=FALSE) +
   coord_sf(crs=CRS("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs")) + 
   theme(plot.margin = unit(c(0, -0.05, 0, -2), "cm"),
         plot.title = element_text(hjust = 0.5)))
@@ -168,12 +172,14 @@ levels(pts5yrs$bidecade) <- formatlabs(levels(pts5yrs$bidecade))
 mapdat5yrs <- cty %>%
   merge(comb5yrs)
 
-mapdat5yrs$pubs_per_mil_per_year[mapdat5yrs$pubs_per_mil_per_year > max(my_breaks)] <- max(my_breaks)
+mapdat5yrs$pubs_per_mil_per_year_cut <- mapdat5yrs$pubs_per_mil_per_year
+mapdat5yrs$pubs_per_mil_per_year_cut[mapdat5yrs$pubs_per_mil_per_year > max(my_breaks)] <- max(my_breaks)
 
 (map2 <- ggplot() + 
-  geom_point(data=data.frame(x=1000000, y=1000000, lab='a', bidecade=unique(mapdat5yrs$bidecade)), aes(x=x, y=y, color=lab), size=0.25, shape=18, show.legend = F) + 
-  geom_sf(data=mapdat5yrs, aes(fill=pubs_per_mil_per_year, alpha=pubs_per_mil_per_year < 0.001), color='#FFFFFF', size=0.1, show.legend = F) + 
-  geom_sf(data=pts5yrs, size=0.1, shape=18, show.legend = F) + 
+  #geom_point(data=data.frame(x=1000000, y=1000000, lab='a', bidecade=unique(mapdat5yrs$bidecade)), aes(x=x, y=y, color=lab), size=0.25, shape=18, show.legend = F) + 
+  geom_sf(data=mapdat5yrs, aes(fill=pubs_per_mil_per_year_cut, #alpha=pubs_per_mil_per_year < 0.001
+                               ), color='#444444', size=0.1, show.legend = F) + 
+  #geom_sf(data=pts5yrs, size=0.1, shape=18, show.legend = F) + 
   scale_fill_viridis(option='D', trans='log',
                      na.value="#440154", guide = guide_colorbar(title.position = "top"),
                      labels=my_breaks, breaks=my_breaks,
@@ -192,11 +198,9 @@ mapdat5yrs$pubs_per_mil_per_year[mapdat5yrs$pubs_per_mil_per_year > max(my_break
   scale_color_manual(values = "#000000", labels=NULL) + 
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) + 
-  scale_alpha_manual(values=c(1, 0.75)) + 
+  #scale_alpha_manual(values=c(1, 0.75)) + 
   coord_sf(crs=CRS("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs")) + 
   facet_wrap(. ~ bidecade, nrow = 1))
-
-ggsave(plot=map2, filename = 'C://Users/matt/mine-food-security-tex/img/Per_Cap_Map2.pdf', width=8, height=5)
 
 ######################################################################################
 # Map plot of both maps together
@@ -204,7 +208,7 @@ ggsave(plot=map2, filename = 'C://Users/matt/mine-food-security-tex/img/Per_Cap_
 
 plot_grid(plotlist=list(map, map2), align='v', ncol=1, nrow=2, rel_heights=c(1, 0.25))
 
-ggsave('C://Users/matt/mine-food-security-tex/img/NewMap.png',
+ggsave('C://Users/matt/mine-food-security-tex/img/Per_Capita_Map.pdf',
        width = 7, height=4)
 
 #############################################################
@@ -308,9 +312,9 @@ palette[1] <- "#e3e3e3"
 names(palette) <- c(1, 2, 3, 4, 5, 6, 7, 8, 9)
 
 map3 <- ggplot() + 
-  geom_sf(data=sp, aes(fill=color), color='#FFFFFF',
+  geom_sf(data=sp, aes(fill=color), color='#000000',
                size=0.3) +
-  scale_fill_manual(values = palette, na.value='#aaaaaa') + 
+  scale_fill_manual(values = palette, na.value='#FFFFFF') + 
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
@@ -335,11 +339,8 @@ leg_dat <- sp %>%
 names(palette) <- c(3, 2, 1, 6, 5, 4, 9, 8, 7)
 
 legend <- ggplot() +
-  geom_point(data = data.frame(x=1, y=1, color=factor(1)), aes(x=x, y=x, color=color), 
-             size=10, shape=15) + 
-  geom_tile(data = leg_dat, aes(x=proteus_q, y=mentions_q, fill=color),
+  geom_tile(data = leg_dat, aes(x=proteus_q, y=mentions_q, fill=color), color='#000000',
             show.legend=FALSE) +
-  scale_color_manual(values = c(`1`='#aaaaaa'), name="No Proteus Index Data", labels=NULL) + 
   scale_fill_manual(values = palette) +
   labs(x = sprintf("More Food Secure \u2192"),
        y = sprintf("More Researched \u2192")) +
@@ -357,7 +358,7 @@ legend <- ggplot() +
 
 ggdraw() +
   draw_plot(map3, 0, 0, 1, 1) +
-  draw_plot(legend, -0.165, 0, 0.575, 0.575)
+  draw_plot(legend, -0.11, 0, 0.5, 0.5)
 
 ggsave('C://Users/matt/mine-food-security-tex/img/Bivariate_Map.png', width=10, height=5)
 #Note: because ggsave() cant handle the unicode in the legend with EPS, must run:

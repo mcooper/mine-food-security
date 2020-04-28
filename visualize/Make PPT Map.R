@@ -12,7 +12,7 @@ df <- data.frame(x=c(38.948965, 35.009952, 31.353693, 38.296795),
 
 ggplot() + 
   geom_sf(data=cty) + 
-  geom_sf(data=df, pch=16, size=3, color=rgb(56/255, 87/255, 35/255)) + 
+  geom_sf(data=df, pch=16, size=3, color=rgb(192/255, 0/255, 0/255)) + 
   theme_void()
 
 ggsave('G://My Drive/mine-food-security/graphic_fig.png')
